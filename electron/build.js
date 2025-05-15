@@ -9,6 +9,10 @@ const electronDir = path.join(rootDir, 'electron');
 const nextDir = path.join(rootDir, '.next');
 const distDir = path.join(rootDir, 'dist');
 
+// Process command line arguments
+const args = process.argv.slice(2);
+const isLinuxBuild = args.includes('--linux');
+
 // Clean up any previous builds
 console.log('Cleaning up previous builds...');
 try {
@@ -62,9 +66,8 @@ if (!fs.existsSync(iconFile)) {
   }
 }
 
-// Run electron-builder
-console.log('Packaging Electron app...');
-builder.build({
+// Set up build configuration
+const buildConfig = {
   config: {
     appId: 'com.smartpc.desktop',
     productName: 'SmartPC Desktop',
@@ -85,11 +88,29 @@ builder.build({
       icon: 'electron/icons/icon.png',
     },
     linux: {
-      target: 'AppImage',
+      target: ['AppImage', 'deb', 'rpm'],
       icon: 'electron/icons/icon.png',
+      category: 'Utility',
+      desktop: {
+        Name: 'SmartPC Storage',
+        Comment: 'Cloud Storage Desktop Application',
+        Categories: 'Utility;FileManager;Network'
+      },
+      maintainer: 'SmartPC Storage Team'
     },
   },
-})
+};
+
+// If Linux build is specified, only build for Linux
+if (isLinuxBuild) {
+  console.log('Building only for Linux platforms...');
+  buildConfig.config.mac = undefined;
+  buildConfig.config.win = undefined;
+}
+
+// Run electron-builder
+console.log('Packaging Electron app...');
+builder.build(buildConfig)
 .then(() => {
   console.log('Electron build completed successfully!');
 })
