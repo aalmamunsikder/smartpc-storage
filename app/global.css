@@ -1,0 +1,190 @@
+/* Drag and Drop Animation Styles */
+.dragging-files {
+  cursor: grabbing !important;
+}
+
+.drag-highlight {
+  box-shadow: 0 0 0 2px rgba(var(--primary), 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(var(--primary), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0);
+  }
+}
+
+.drop-effect {
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.8;
+}
+
+/* File drag preview styles */
+.drag-preview {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  padding: 8px;
+  opacity: 0.9;
+  transform-origin: center;
+  transition: transform 0.1s ease-out;
+}
+
+.drag-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.drag-preview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--foreground));
+}
+
+.drag-preview-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.drag-preview.copy::after {
+  content: "+";
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Folder transitions */
+.folder-expand-enter {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+}
+
+.folder-expand-enter-active {
+  opacity: 1;
+  max-height: 1000px;
+  transition: opacity 300ms, max-height 300ms;
+}
+
+.folder-expand-exit {
+  opacity: 1;
+  max-height: 1000px;
+  overflow: hidden;
+}
+
+.folder-expand-exit-active {
+  opacity: 0;
+  max-height: 0;
+  transition: opacity 300ms, max-height 300ms;
+}
+
+/* Drag operations */
+.file-dragging {
+  transform: scale(1.03);
+  opacity: 0.8;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+              0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Target folder highlight pulse animation */
+@keyframes targetPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(var(--primary), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0);
+  }
+}
+
+.drop-target-active {
+  animation: targetPulse 1.5s infinite;
+  transform: scale(1.05);
+  transition: transform 0.2s ease-out;
+}
+
+/* Success checkmark animation */
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-checkmark {
+  animation: checkmark 0.5s ease-out forwards;
+}
+
+/* File copy trail effect */
+@keyframes fileCopyTrail {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.file-copy-trail {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(var(--primary), 0.3);
+  pointer-events: none;
+  animation: fileCopyTrail 0.6s ease-out forwards;
+} 
