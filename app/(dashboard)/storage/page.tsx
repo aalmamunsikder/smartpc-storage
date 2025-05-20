@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import CloudStorage from '@/components/dashboard/CloudStorage';
-import CloudStorageCategories from '@/components/dashboard/CloudStorageCategories';
 import { useRouter } from 'next/navigation';
 
 export default function StoragePage() {
@@ -73,11 +72,6 @@ export default function StoragePage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Smart Storage</h1>
-      
-      {/* Categories section */}
-      <div className="mb-6">
-        <CloudStorageCategories />
-      </div>
       
       {/* Main storage component */}
       <CloudStorage />

@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'framer-motion';
+import CloudStorageCategories from './CloudStorageCategories';
 
 // Main navigation items
 const navItems = [
@@ -143,6 +144,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const [draggedFiles, setDraggedFiles] = useState<any[]>([]);
   const [draggedOver, setDraggedOver] = useState<string | null>(null);
   const [dropTargetPulse, setDropTargetPulse] = useState(false);
+
+  // Add a state for categories section visibility
+  const [categoriesVisible, setCategoriesVisible] = useState(true);
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -373,6 +377,61 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     }
   };
 
+  // Update the root folder item to also support drop functionality with animation
+  const renderRootFolder = () => {
+    const isDropTarget = draggedOver === 'root';
+    
+    return (
+      <motion.div
+        key="root-folder"
+        className={cn(
+          "flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer text-sm",
+          selectedFolder === null 
+            ? "bg-primary/10 text-primary" 
+            : isDropTarget
+            ? "bg-secondary text-primary shadow-md" 
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}
+        onClick={() => handleFolderClick('root')}
+        onDragOver={(e) => handleDragOver(e, 'root')}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, 'root')}
+        animate={isDropTarget ? "active" : "inactive"}
+        variants={{
+          active: { 
+            scale: 1.05,
+            boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
+          },
+          inactive: { 
+            scale: 1,
+            boxShadow: "none"
+          }
+        }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      >
+        {/* Drop indicator pulse animation */}
+        {isDropTarget && dropTargetPulse && (
+          <motion.div 
+            key="root-folder-pulse"
+            className="absolute inset-0 rounded-md bg-primary/10 z-0"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ 
+              opacity: [0.5, 0.2, 0.5], 
+              scale: [0.98, 1.02, 0.98] 
+            }}
+            transition={{ 
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut" 
+            }}
+          />
+        )}
+        <Home className="h-4 w-4 mr-2 z-10" />
+        <span className="z-10">Home</span>
+      </motion.div>
+    );
+  };
+
   // Update the folder item rendering to include drop functionality with animation
   const renderFolders = (parentId: string | null, level = 0) => {
     const childFolders = getChildFolders(parentId);
@@ -391,6 +450,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           return (
             <div key={folder.id} className="relative">
               <motion.div
+                key={`folder-${folder.id}`}
                 className={cn(
                   "flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer text-sm",
                   selectedFolder === folder.id 
@@ -418,6 +478,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 {/* Drop indicator pulse animation */}
                 {isDropTarget && dropTargetPulse && (
                   <motion.div 
+                    key={`folder-pulse-${folder.id}`}
                     className="absolute inset-0 rounded-md bg-primary/10 z-0"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ 
@@ -461,6 +522,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
+                    key={`subfolder-${folder.id}`}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
@@ -477,59 +539,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     );
   };
   
-  // Update the root folder item to also support drop functionality with animation
-  const renderRootFolder = () => {
-    const isDropTarget = draggedOver === 'root';
-    
-    return (
-      <motion.div
-        className={cn(
-          "flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer text-sm",
-          selectedFolder === null 
-            ? "bg-primary/10 text-primary" 
-            : isDropTarget
-            ? "bg-secondary text-primary shadow-md" 
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-        )}
-        onClick={() => handleFolderClick('root')}
-        onDragOver={(e) => handleDragOver(e, 'root')}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, 'root')}
-        animate={isDropTarget ? "active" : "inactive"}
-        variants={{
-          active: { 
-            scale: 1.05,
-            boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
-          },
-          inactive: { 
-            scale: 1,
-            boxShadow: "none"
-          }
-        }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      >
-        {/* Drop indicator pulse animation */}
-        {isDropTarget && dropTargetPulse && (
-          <motion.div 
-            className="absolute inset-0 rounded-md bg-primary/10 z-0"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ 
-              opacity: [0.5, 0.2, 0.5], 
-              scale: [0.98, 1.02, 0.98] 
-            }}
-            transition={{ 
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut" 
-            }}
-          />
-        )}
-        <Home className="h-4 w-4 mr-2 z-10" />
-        <span className="z-10">Home</span>
-      </motion.div>
-    );
-  };
-
   // Listen for folder navigation events from CloudStorage
   useEffect(() => {
     const handleExternalFolderSelect = (event: CustomEvent) => {
@@ -607,212 +616,88 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   }, [expandedFolders]);
 
   return (
-    <>
-      {/* Mobile Menu Toggle */}
-      <div className="fixed top-4 left-4 z-50 md:hidden">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={toggleMobileSidebar}
-          className="h-10 w-10 rounded-full"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
+    <AnimatePresence>
       {/* Mobile Overlay */}
       {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
-          onClick={() => setMobileOpen(false)}
+        <motion.div
+          key="mobile-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black z-40 lg:hidden"
+          onClick={toggleMobileSidebar}
         />
       )}
-
-      {/* Sidebar */}
-      <aside 
+      
+      {/* Sidebar Container */}
+      <motion.aside
+        key="sidebar"
+        initial={false}
+        animate={{ 
+          width: collapsed ? '72px' : '260px',
+          x: mobileOpen ? 0 : (collapsed ? 0 : 0)
+        }}
+        transition={{ duration: 0.2 }}
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 md:relative transition-all duration-300 bg-card border-r border-border",
-          collapsed ? "w-20" : "w-64",
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-          draggedFiles.length > 0 && "drag-highlight"
+          "fixed top-0 left-0 z-50 h-full bg-background border-r flex flex-col",
+          "lg:relative lg:z-auto",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="flex flex-col h-full">
-          {/* Sidebar Header */}
-          <div className="h-16 px-4 border-b border-border flex items-center justify-between">
-            {!collapsed && (
-              <div className="flex items-center">
-                <span className="font-bold gradient-text text-lg">Smart Storage Connect</span>
-              </div>
-            )}
-            
-            <div className={cn("flex items-center", collapsed && "w-full justify-center")}>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleSidebar}
-                className="hidden md:flex hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                {collapsed ? 
-                  <ArrowRightToLine className="h-5 w-5 transition-transform duration-200" /> : 
-                  <ArrowLeftToLine className="h-5 w-5 transition-transform duration-200" />
-                }
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleMobileSidebar}
-                className="md:hidden"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+        {/* Sidebar Header */}
+        <div className="h-16 border-b flex items-center justify-between px-4">
+          {!collapsed && (
+            <div className="flex items-center">
+              <span className="font-bold gradient-text text-lg">Smart Storage Connect</span>
             </div>
-          </div>
+          )}
           
-          {/* Navigation Links */}
-          <div className="flex-1 py-6 px-3 overflow-y-auto">
-            <div className="space-y-1">
-              {navItems.map((item) => (
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="hidden lg:flex">
+              {collapsed ? <ArrowRightToLine className="h-5 w-5" /> : <ArrowLeftToLine className="h-5 w-5" />}
+            </Button>
+            
+            <Button variant="ghost" size="icon" onClick={toggleMobileSidebar} className="lg:hidden">
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Sidebar Content */}
+        <div className="flex-1 overflow-y-auto py-4 px-2">
+          {/* Main Navigation */}
+          <nav className="space-y-1.5">
+            {navItems.map((item) => {
+              const isActive = activePath.startsWith(item.path);
+              const ItemIcon = item.icon;
+              
+              return (
                 <Button
                   key={item.path}
-                  variant="ghost"
-                  onClick={() => handleNavigation(item.path)}
+                  variant={isActive ? "default" : "ghost"}
                   className={cn(
-                    "w-full justify-start gap-2",
-                    activePath === item.path 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    collapsed && "justify-center px-0"
+                    "w-full justify-start",
+                    collapsed ? "px-2" : "px-3"
                   )}
+                  onClick={() => handleNavigation(item.path)}
                 >
-                  <item.icon className={cn("h-5 w-5", collapsed ? "mx-auto" : "")} />
+                  <ItemIcon className={cn("h-5 w-5", collapsed ? "mr-0" : "mr-3")} />
                   {!collapsed && <span>{item.name}</span>}
                 </Button>
-              ))}
-            </div>
-            
-            {/* Folders Section */}
-            {!collapsed && (
-              <>
-                <div className="mt-8 mb-2">
-                  <div className="flex items-center justify-between px-3">
-                    <h3 className="text-xs uppercase font-semibold text-muted-foreground">Folders</h3>
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 text-primary"
-                        onClick={() => {
-                          setParentFolderForNew(null);
-                          setIsCreateFolderOpen(true);
-                        }}
-                      >
-                        <FolderPlus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 pl-2">
-                  {/* Home/Root button with drop functionality */}
-                  {renderRootFolder()}
-                  
-                  {/* Folder hierarchy with drop functionality */}
-                  {renderFolders(null)}
-                  
-                  <Button
-                    variant="ghost" 
-                    size="sm"
-                    className="mt-2 text-primary w-full justify-start"
-                    onClick={() => {
-                      setParentFolderForNew(null);
-                      setIsCreateFolderOpen(true);
-                    }}
-                  >
-                    <FolderPlus className="h-4 w-4 mr-2" />
-                    <span>New Folder</span>
-                  </Button>
-                  </div>
-              </>
-            )}
-            
-            {/* Collapsed Folders Section */}
-            {collapsed && (
-              <div className="mt-8 space-y-3 flex flex-col items-center">
-                {/* Home shortcut with drop functionality */}
-                <motion.div
-                  onClick={() => handleFolderClick('root')}
-                  className={cn(
-                    "cursor-pointer transition-colors p-1.5 rounded-md",
-                    selectedFolder === null ? "bg-primary/10" : "bg-blue-600",
-                    draggedOver === 'root' && "ring-2 ring-primary"
-                  )}
-                  title="Home"
-                  onDragOver={(e) => handleDragOver(e, 'root')}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, 'root')}
-                  animate={draggedOver === 'root' ? "active" : "inactive"}
-                  variants={{
-                    active: { 
-                      scale: 1.1,
-                      boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
-                    },
-                    inactive: { 
-                      scale: 1,
-                      boxShadow: "none"
-                    }
-                  }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                >
-                  <Home className="h-3.5 w-3.5 text-white" />
-                </motion.div>
-                
-                {/* Top level folders only with drop functionality */}
-                {folders
-                  .filter(folder => folder.parentId === null)
-                  .slice(0, 5)
-                  .map((folder) => {
-                    const isDropTarget = draggedOver === folder.id;
-                    
-                  return (
-                      <motion.div
-                        key={folder.id}
-                        onClick={() => handleFolderClick(folder.id)}
-                      className={cn(
-                        "cursor-pointer transition-colors",
-                          selectedFolder === folder.id && "bg-primary/10 p-1 rounded-md",
-                          isDropTarget && "ring-2 ring-primary rounded-md"
-                        )}
-                        onDragOver={(e) => handleDragOver(e, folder.id)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, folder.id)}
-                        animate={isDropTarget ? "active" : "inactive"}
-                        variants={{
-                          active: { 
-                            scale: 1.1,
-                            boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
-                          },
-                          inactive: { 
-                            scale: 1,
-                            boxShadow: "none"
-                          }
-                        }}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    >
-                      <div 
-                          className={`${folder.color.split(' ')[0]} p-1.5 rounded-md`}
-                          title={folder.name}
-                      >
-                          <Folder className="h-3.5 w-3.5 text-white" />
-                      </div>
-                      </motion.div>
-                  );
-                })}
-                
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 mt-2"
+              );
+            })}
+          </nav>
+          
+          {/* Folders Section */}
+          <div className="mt-6 border-t pt-4">
+            <div className="px-3 py-2 text-sm font-medium flex items-center justify-between">
+              <div className="flex items-center">
+                {!collapsed && <span>Folders</span>}
+                {collapsed && <Folder className="h-5 w-5" />}
+              </div>
+              
+              {!collapsed && (
+                <Button variant="ghost" size="icon" className="h-6 w-6"
                   onClick={() => {
                     setParentFolderForNew(null);
                     setIsCreateFolderOpen(true);
@@ -820,78 +705,64 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 >
                   <FolderPlus className="h-4 w-4" />
                 </Button>
-              </div>
-            )}
-          </div>
-          
-          {/* Sidebar Footer */}
-          <div className="p-4 border-t border-border">
-            <Button 
-              variant="ghost" 
-              className={cn(
-                "w-full text-muted-foreground hover:text-destructive flex items-center",
-                collapsed && "justify-center px-0"
               )}
-            >
-              <LogOut className={cn("h-5 w-5", collapsed ? "mx-auto" : "mr-3")} />
-              {!collapsed && <span>Exit</span>}
-            </Button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Create Folder Dialog */}
-      <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div>
-              <Label htmlFor="folder-name" className="block text-sm font-medium mb-2">
-                Folder Name
-            </Label>
-            <Input
-                id="folder-name"
-                placeholder="New Folder"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-              className="w-full"
-            />
             </div>
             
-            <div>
-              <Label htmlFor="parent-folder" className="block text-sm font-medium mb-2">
-                Parent Folder
-              </Label>
-              <div className="relative">
-                <select
-                  id="parent-folder"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={parentFolderForNew || ''}
-                  onChange={(e) => setParentFolderForNew(e.target.value === '' ? null : e.target.value)}
-                >
-                  <option value="">Root (Home)</option>
-                  {folders.map(folder => (
-                    <option key={folder.id} value={folder.id}>
-                      {folder.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Root folder */}
+            {renderRootFolder()}
+            
+            {/* Nested folders */}
+            <div className="mt-1.5">
+              {renderFolders(null)}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateFolderOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateFolder}>
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          
+          {/* Categories Section - Only visible when on storage page and not collapsed */}
+          {activePath.startsWith('/storage') && !collapsed && (
+            <div className="mt-6 border-t pt-4">
+              <div 
+                className="flex items-center justify-between px-3 py-2 text-sm font-medium cursor-pointer hover:bg-accent rounded-md"
+                onClick={() => setCategoriesVisible(!categoriesVisible)}
+              >
+                <span>Categories</span>
+                <ChevronDown 
+                  className={`h-4 w-4 transition-transform ${categoriesVisible ? 'rotate-0' : '-rotate-90'}`} 
+                />
+              </div>
+              
+              {categoriesVisible && (
+                <div className="mt-2 pl-1">
+                  <CloudStorageCategories sidebar={true} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-border">
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "w-full text-muted-foreground hover:text-destructive flex items-center",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <LogOut className={cn("h-5 w-5", collapsed ? "mx-auto" : "mr-3")} />
+            {!collapsed && <span>Exit</span>}
+          </Button>
+        </div>
+      </motion.aside>
+      
+      {/* Mobile Sidebar Toggle */}
+      <motion.button
+        key="mobile-toggle"
+        className="fixed bottom-4 right-4 lg:hidden bg-primary text-primary-foreground rounded-full p-3 shadow-lg z-40"
+        onClick={toggleMobileSidebar}
+      >
+        <Menu className="h-6 w-6" />
+      </motion.button>
+    </AnimatePresence>
   );
 };
 

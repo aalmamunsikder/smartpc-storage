@@ -41,6 +41,11 @@ interface Category {
   special?: boolean; // Flag for special categories that can't be edited/deleted
 }
 
+// Component props
+interface CloudStorageCategoriesProps {
+  sidebar?: boolean; // Flag to indicate if rendered in sidebar
+}
+
 // Special categories
 const specialCategories: Category[] = [
   { id: 'all', name: 'All Files', icon: Files, color: 'bg-purple-600', count: 0, special: true },
@@ -57,7 +62,7 @@ const defaultCategories: Category[] = [
   { id: '6', name: 'Archives', icon: Archive, color: 'bg-gray-500', count: 8 },
 ];
 
-const CloudStorageCategories = () => {
+const CloudStorageCategories: React.FC<CloudStorageCategoriesProps> = ({ sidebar = false }) => {
   const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -168,125 +173,168 @@ const CloudStorageCategories = () => {
     window.dispatchEvent(event);
   };
 
+  // Common dialog components regardless of layout
+  const createCategoryDialog = (
+    <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Category</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <Label htmlFor="category-name" className="block text-sm font-medium mb-2">
+            Category Name
+          </Label>
+          <Input
+            id="category-name"
+            placeholder="New Category"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreateCategory}>
+            Create
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  const editCategoryDialog = (
+    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Category</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <Label htmlFor="edit-category-name" className="block text-sm font-medium mb-2">
+            Category Name
+          </Label>
+          <Input
+            id="edit-category-name"
+            placeholder="Category Name"
+            value={editingCategory?.name || ''}
+            onChange={(e) => setEditingCategory(prev => prev ? {...prev, name: e.target.value} : null)}
+            className="w-full"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleEditCategory}>
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-md font-medium">Categories</CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="h-8"
-          onClick={() => setIsCreateOpen(true)}
-        >
-          <FolderPlus className="h-4 w-4 mr-2" />
-          New Category
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <>
+      {sidebar ? (
+        // Sidebar layout
+        <div className="space-y-2">
           {allCategories.map((category) => {
             const CategoryIcon = category.icon;
             return (
               <div
                 key={category.id}
-                className="flex items-center space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent transition-colors cursor-pointer"
                 onClick={() => handleCategoryClick(category.id)}
               >
-                <div className={`${category.color} p-2 rounded-md text-white`}>
-                  <CategoryIcon className="h-5 w-5" />
+                <div className={`${category.color} p-1 rounded-md text-white`}>
+                  <CategoryIcon className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{category.name}</p>
-                  <p className="text-xs text-muted-foreground">{category.count} files</p>
                 </div>
-                {!category.special && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEditDialog(category); }}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="text-destructive focus:text-destructive"
-                        onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category.id); }}
-                    >
-                      <X className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                )}
+                <div className="text-xs text-muted-foreground">
+                  {category.count}
+                </div>
               </div>
             );
           })}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-start mt-2 text-muted-foreground"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <FolderPlus className="h-4 w-4 mr-2" />
+            New Category
+          </Button>
         </div>
-
-        {/* Create Category Dialog */}
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Category</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <Label htmlFor="category-name" className="block text-sm font-medium mb-2">
-                Category Name
-              </Label>
-              <Input
-                id="category-name"
-                placeholder="New Category"
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                className="w-full"
-              />
+      ) : (
+        // Original card layout
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-md font-medium">Categories</CardTitle>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8"
+              onClick={() => setIsCreateOpen(true)}
+            >
+              <FolderPlus className="h-4 w-4 mr-2" />
+              New Category
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {allCategories.map((category) => {
+                const CategoryIcon = category.icon;
+                return (
+                  <div
+                    key={category.id}
+                    className="flex items-center space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                    onClick={() => handleCategoryClick(category.id)}
+                  >
+                    <div className={`${category.color} p-2 rounded-md text-white`}>
+                      <CategoryIcon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{category.name}</p>
+                      <p className="text-xs text-muted-foreground">{category.count} files</p>
+                    </div>
+                    {!category.special && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEditDialog(category); }}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteCategory(category.id); }}
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateCategory}>
-                Create
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Edit Category Dialog */}
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Category</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <Label htmlFor="edit-category-name" className="block text-sm font-medium mb-2">
-                Category Name
-              </Label>
-              <Input
-                id="edit-category-name"
-                value={editingCategory?.name || ''}
-                onChange={(e) => editingCategory && setEditingCategory({
-                  ...editingCategory,
-                  name: e.target.value
-                })}
-                className="w-full"
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleEditCategory}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+      {/* Common dialogs */}
+      {createCategoryDialog}
+      {editCategoryDialog}
+    </>
   );
 };
 
